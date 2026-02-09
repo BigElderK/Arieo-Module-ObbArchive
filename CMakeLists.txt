@@ -13,7 +13,9 @@ arieo_engine_project(
     INTERFACES
         Arieo-Interface-Archive::arieo_archive_interface
     PACKAGES
+        Arieo-Interface-Archive
         zlib
+        Arieo-Core
     PRIVATE_LIBS
         arieo::base
         arieo::core
