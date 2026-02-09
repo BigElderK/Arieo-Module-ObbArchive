@@ -5,19 +5,19 @@ project(ArieoEngine)
 
 arieo_engine_project(
     arieo_obb_archive_module
-    ALIAS arieo::modules::archive::obb
     PROJECT_TYPE module
-    SOURCES
-        ${CMAKE_CURRENT_SOURCE_DIR}/private/src/*.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/private/src/*/*.cpp
-    INTERFACES
-        Arieo-Interface-Archive::arieo_archive_interface
+
     PACKAGES
         Arieo-Interface-Archive
         zlib
         Arieo-Core
+    INTERFACES
+        Arieo-Interface-Archive::arieo_archive_interface
     PRIVATE_LIBS
-        arieo::base
-        arieo::core
+        Arieo-Core::arieo_core
         ZLIB::ZLIB
+
+    SOURCES
+        ${CMAKE_CURRENT_SOURCE_DIR}/private/src/*.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/private/src/*/*.cpp
 )
