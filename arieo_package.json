@@ -1,13 +1,14 @@
 {
     "name": "Arieo-Module-ObbArchive",
     "description": "OBB Archive module implementation",
-    "build_commands":
+    "cmake_presets_file": "$ENV{ARIEO_BUILDENV_PACKAGE_INSTALL_FOLDER}/cmake/CMakePresets.json",
+    "build_commands": 
     [
-        "cmake -P $ENV{ARIEO_BUILDENV_PACKAGE_INSTALL_FOLDER}/cmake/package/build_engine_project_package.cmake"
+        "${CMAKE_COMMAND} --build ."
     ],
     "install_commands": 
     [
-        "cmake -P $ENV{ARIEO_BUILDENV_PACKAGE_INSTALL_FOLDER}/cmake/package/install_engine_project_package.cmake"
+        "${CMAKE_COMMAND} --build . --target install"
     ],
     "dependencies": 
     {
