@@ -1,0 +1,16 @@
+category: 02_engine
+name: Arieo-Module-ObbArchive
+description: OBB Archive module implementation
+cmake_presets_file: $ENV{ARIEO_BUILDENV_PACKAGE_INSTALL_FOLDER}/cmake/CMakePresets.json
+build_commands:
+- ${CMAKE_COMMAND} --build .
+install_commands:
+- ${CMAKE_COMMAND} --build . --target install
+dependencies:
+  packages:
+  - git_url: https://github.com/BigElderK/Arieo-BuildEnv.git
+    tag: main
+  - git_url: https://github.com/BigElderK/Arieo-Core.git
+    tag: main
+  - git_url: https://github.com/BigElderK/Arieo-Interface-Archive.git
+    tag: main
