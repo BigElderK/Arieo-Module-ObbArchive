@@ -103,6 +103,13 @@ namespace Arieo
     public:
         Interface::Archive::IArchive* createArchive(const std::filesystem::path& obb_file_path) override
         {
+            // Check if obb_file_path exists and is a regular file
+            if(std::filesystem::exists(obb_file_path) == false || std::filesystem::is_regular_file(obb_file_path) == false)
+            {
+                Core::Logger::error("Invalid OBB file path: {}", obb_file_path.string());
+                return nullptr;
+            }
+            
             OBBArchive* created_archive = Base::newT<OBBArchive>(obb_file_path);
             if(created_archive->isValid() == false)
             {
