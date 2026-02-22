@@ -1,9 +1,16 @@
 cmake_minimum_required (VERSION 3.31)
 
 include($ENV{ARIEO_BUILD_ENV_PACKAGES_OUTPUT_DIR}/cmake/build_environment.cmake)
-project(ArieoEngine)
 
-arieo_engine_project(
+ARIEO_PACKAGE(
+    Arieo-Module-ObbArchive
+    CATEGORY 02_engine
+    DEPENDS
+        https://github.com/BigElderK/Arieo-Core.git@main
+        https://github.com/BigElderK/Arieo-Interface-Archive.git@main
+)
+
+ARIEO_ENGINE_PROJECT(
     arieo_obb_archive_module
     PROJECT_TYPE module
 
@@ -13,9 +20,8 @@ arieo_engine_project(
             Arieo-Interface-Archive
         THIRDPARTY_PACKAGES
             zlib
-        INTERFACES
-            Arieo-Interface-Archive::arieo_archive_interface
         PRIVATE_LIBS
+            Arieo-Interface-Archive::arieo_archive_interface
             Arieo-Core::arieo_core
             ZLIB::ZLIB
 
