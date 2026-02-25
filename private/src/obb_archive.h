@@ -101,7 +101,7 @@ namespace Arieo
 
         }
     public:
-        Interface::Archive::IArchive* createArchive(const std::filesystem::path& obb_file_path) override
+        Base::Interface<Interface::Archive::IArchive> createArchive(const std::filesystem::path& obb_file_path) override
         {
             // Check if obb_file_path exists and is a regular file
             if(std::filesystem::exists(obb_file_path) == false || std::filesystem::is_regular_file(obb_file_path) == false)
@@ -119,9 +119,9 @@ namespace Arieo
             return created_archive;
         }
 
-        void destroyArchive(Interface::Archive::IArchive* archive) override
+        void destroyArchive(Base::Interface<Interface::Archive::IArchive> archive) override
         {
-            OBBArchive* obb_archive = Base::castInterfaceToInstance<OBBArchive>(archive);
+            OBBArchive* obb_archive = archive.castTo<OBBArchive>();
             return Base::deleteT(obb_archive);
         }
     };
