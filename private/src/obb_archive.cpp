@@ -5,86 +5,83 @@
 
 namespace Arieo
 {
-    Interface::Archive::FileBuffer OBBArchive::getFileBuffer(const Base::Parameter::String& relative_path)
+    Base::Interface<Interface::Archive::IFileBuffer> OBBArchive::aquireFileBuffer(const Base::Parameter::String& relative_path)
     {
-        auto found_cache_iter = m_file_buffer_cache_map.find(relative_path.getString());
-        if(found_cache_iter != m_file_buffer_cache_map.end())
-        {
-            return Interface::Archive::FileBuffer{std::get<0>(found_cache_iter->second), std::get<1>(found_cache_iter->second)};
+        if (!m_is_valid) {
+            Core::Logger::error("OBB file is not valid: {}", m_obb_file_path.string());
+            return nullptr;
         }
-        else
-        {
-            if (!m_is_valid) {
-                Core::Logger::error("OBB file is not valid: {}", m_obb_file_path.string());
-                return Interface::Archive::FileBuffer{nullptr, 0};
-            }
 
-            std::string path_str = relative_path.getString();
-            auto entry_iter = m_zip_entries.find(path_str);
-            if (entry_iter == m_zip_entries.end()) {
-                Core::Logger::error("File not found in OBB: {}", path_str);
-                return Interface::Archive::FileBuffer{nullptr, 0};
-            }
+        std::string path_str = relative_path.getString();
+        auto entry_iter = m_zip_entries.find(path_str);
+        if (entry_iter == m_zip_entries.end()) {
+            Core::Logger::error("File not found in OBB: {}", path_str);
+            return nullptr;
+        }
 
-            const ZipFileEntry& entry = entry_iter->second;
+        const ZipFileEntry& entry = entry_iter->second;
+        
+        // Read compressed data from OBB file
+        m_obb_file.seekg(entry.file_data_offset, std::ios::beg);
+        std::vector<uint8_t> compressed_data(entry.compressed_size);
+        m_obb_file.read(reinterpret_cast<char*>(compressed_data.data()), entry.compressed_size);
+
+        void* buffer = nullptr;
+        size_t buffer_size = 0;
+
+        if (entry.compression_method == 0) {
+            // No compression - store method
+            buffer_size = entry.uncompressed_size;
+            buffer = Base::Memory::malloc(buffer_size);
+            std::memcpy(buffer, compressed_data.data(), buffer_size);
+        } else if (entry.compression_method == 8) {
+            // Deflate compression
+            buffer_size = entry.uncompressed_size;
+            buffer = Base::Memory::malloc(buffer_size);
             
-            // Read compressed data from OBB file
-            m_obb_file.seekg(entry.file_data_offset, std::ios::beg);
-            std::vector<uint8_t> compressed_data(entry.compressed_size);
-            m_obb_file.read(reinterpret_cast<char*>(compressed_data.data()), entry.compressed_size);
+            z_stream strm = {};
+            strm.next_in = compressed_data.data();
+            strm.avail_in = entry.compressed_size;
+            strm.next_out = static_cast<uint8_t*>(buffer);
+            strm.avail_out = buffer_size;
 
-            void* buffer = nullptr;
-            size_t buffer_size = 0;
-
-            if (entry.compression_method == 0) {
-                // No compression - store method
-                buffer_size = entry.uncompressed_size;
-                buffer = Base::Memory::malloc(buffer_size);
-                std::memcpy(buffer, compressed_data.data(), buffer_size);
-            } else if (entry.compression_method == 8) {
-                // Deflate compression
-                buffer_size = entry.uncompressed_size;
-                buffer = Base::Memory::malloc(buffer_size);
-                
-                z_stream strm = {};
-                strm.next_in = compressed_data.data();
-                strm.avail_in = entry.compressed_size;
-                strm.next_out = static_cast<uint8_t*>(buffer);
-                strm.avail_out = buffer_size;
-
-                if (inflateInit2(&strm, -MAX_WBITS) != Z_OK) {
-                    Core::Logger::error("Failed to initialize zlib for: {}", path_str);
-                    Base::Memory::free(buffer);
-                    return Interface::Archive::FileBuffer{nullptr, 0};
-                }
-
-                int ret = inflate(&strm, Z_FINISH);
-                inflateEnd(&strm);
-
-                if (ret != Z_STREAM_END) {
-                    Core::Logger::error("Failed to decompress file: {}", path_str);
-                    Base::Memory::free(buffer);
-                    return Interface::Archive::FileBuffer{nullptr, 0};
-                }
-            } else {
-                Core::Logger::error("Unsupported compression method {} for file: {}", entry.compression_method, path_str);
-                return Interface::Archive::FileBuffer{nullptr, 0};
+            if (inflateInit2(&strm, -MAX_WBITS) != Z_OK) {
+                Core::Logger::error("Failed to initialize zlib for: {}", path_str);
+                Base::Memory::free(buffer);
+                return nullptr;
             }
 
-            // Cache the buffer
-            m_file_buffer_cache_map.emplace(relative_path.getString(), std::make_tuple(buffer, buffer_size));
-            return Interface::Archive::FileBuffer{buffer, buffer_size};
+            int ret = inflate(&strm, Z_FINISH);
+            inflateEnd(&strm);
+
+            if (ret != Z_STREAM_END) {
+                Core::Logger::error("Failed to decompress file: {}", path_str);
+                Base::Memory::free(buffer);
+                return nullptr;
+            }
+        } else {
+            Core::Logger::error("Unsupported compression method {} for file: {}", entry.compression_method, path_str);
+            return nullptr;
         }
+
+        auto file_buffer = Base::Interface<Interface::Archive::IFileBuffer>::createAs<FileBuffer>(buffer, buffer_size);
+        m_file_buffers.insert(file_buffer);
+        return file_buffer;
+    }
+
+    void OBBArchive::releaseFileBuffer(Base::Interface<Interface::Archive::IFileBuffer> file_buffer)
+    {
+        m_file_buffers.erase(file_buffer);
+        file_buffer.destroyAs<FileBuffer>();
     }
 
     void OBBArchive::clearCache()
     {
-        for(auto iter : m_file_buffer_cache_map)
+        for(auto fb : m_file_buffers)
         {
-            void* buffer = std::get<0>(iter.second);
-            Base::Memory::free(buffer);
+            fb.destroyAs<FileBuffer>();
         }
-        m_file_buffer_cache_map.clear();
+        m_file_buffers.clear();
     }
 
     void OBBArchive::parseOBBFile()
