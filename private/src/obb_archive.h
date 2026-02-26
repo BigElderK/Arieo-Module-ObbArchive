@@ -57,7 +57,7 @@ namespace Arieo
     {
     protected:
         std::filesystem::path m_obb_file_path;
-        std::unordered_map<std::filesystem::path, std::tuple<void*, size_t>> m_file_buffer_cache_map;
+        std::unordered_map<std::string, std::tuple<void*, size_t>> m_file_buffer_cache_map;
         std::unordered_map<std::string, ZipFileEntry> m_zip_entries;
         mutable std::ifstream m_obb_file;
         bool m_is_valid;
@@ -76,7 +76,7 @@ namespace Arieo
             }
         }
 
-        std::tuple<void*, size_t> getFileBuffer(const std::filesystem::path& relative_path) override;
+        Interface::Archive::FileBuffer getFileBuffer(const Base::Parameter::String& relative_path) override;
 
         void clearCache();
         bool isValid() const { return m_is_valid; }
@@ -101,16 +101,17 @@ namespace Arieo
 
         }
     public:
-        Base::Interface<Interface::Archive::IArchive> createArchive(const std::filesystem::path& obb_file_path) override
+        Base::Interface<Interface::Archive::IArchive> createArchive(const Base::Parameter::String& obb_file_path) override
         {
+            std::filesystem::path obb_path(obb_file_path.getString());
             // Check if obb_file_path exists and is a regular file
-            if(std::filesystem::exists(obb_file_path) == false || std::filesystem::is_regular_file(obb_file_path) == false)
+            if(std::filesystem::exists(obb_path) == false || std::filesystem::is_regular_file(obb_path) == false)
             {
-                Core::Logger::error("Invalid OBB file path: {}", obb_file_path.string());
+                Core::Logger::error("Invalid OBB file path: {}", obb_path.string());
                 return nullptr;
             }
             
-            Base::Interface<Interface::Archive::IArchive> created_archive = Base::Interface<Interface::Archive::IArchive>::createAs<OBBArchive>(obb_file_path);
+            Base::Interface<Interface::Archive::IArchive> created_archive = Base::Interface<Interface::Archive::IArchive>::createAs<OBBArchive>(obb_path.string());
             if(created_archive.castTo<OBBArchive>()->isValid() == false)
             {
                 created_archive.destroyAs<OBBArchive>();

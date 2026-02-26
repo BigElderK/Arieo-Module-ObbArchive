@@ -5,25 +5,25 @@
 
 namespace Arieo
 {
-    std::tuple<void*, size_t> OBBArchive::getFileBuffer(const std::filesystem::path& relative_path)
+    Interface::Archive::FileBuffer OBBArchive::getFileBuffer(const Base::Parameter::String& relative_path)
     {
-        auto found_cache_iter = m_file_buffer_cache_map.find(relative_path);
+        auto found_cache_iter = m_file_buffer_cache_map.find(relative_path.getString());
         if(found_cache_iter != m_file_buffer_cache_map.end())
         {
-            return found_cache_iter->second;
+            return Interface::Archive::FileBuffer{std::get<0>(found_cache_iter->second), std::get<1>(found_cache_iter->second)};
         }
         else
         {
             if (!m_is_valid) {
                 Core::Logger::error("OBB file is not valid: {}", m_obb_file_path.string());
-                return std::make_tuple(nullptr, 0);
+                return Interface::Archive::FileBuffer{nullptr, 0};
             }
 
-            std::string path_str = relative_path.string();
+            std::string path_str = relative_path.getString();
             auto entry_iter = m_zip_entries.find(path_str);
             if (entry_iter == m_zip_entries.end()) {
                 Core::Logger::error("File not found in OBB: {}", path_str);
-                return std::make_tuple(nullptr, 0);
+                return Interface::Archive::FileBuffer{nullptr, 0};
             }
 
             const ZipFileEntry& entry = entry_iter->second;
@@ -55,7 +55,7 @@ namespace Arieo
                 if (inflateInit2(&strm, -MAX_WBITS) != Z_OK) {
                     Core::Logger::error("Failed to initialize zlib for: {}", path_str);
                     Base::Memory::free(buffer);
-                    return std::make_tuple(nullptr, 0);
+                    return Interface::Archive::FileBuffer{nullptr, 0};
                 }
 
                 int ret = inflate(&strm, Z_FINISH);
@@ -64,16 +64,16 @@ namespace Arieo
                 if (ret != Z_STREAM_END) {
                     Core::Logger::error("Failed to decompress file: {}", path_str);
                     Base::Memory::free(buffer);
-                    return std::make_tuple(nullptr, 0);
+                    return Interface::Archive::FileBuffer{nullptr, 0};
                 }
             } else {
                 Core::Logger::error("Unsupported compression method {} for file: {}", entry.compression_method, path_str);
-                return std::make_tuple(nullptr, 0);
+                return Interface::Archive::FileBuffer{nullptr, 0};
             }
 
             // Cache the buffer
-            m_file_buffer_cache_map.emplace(relative_path, std::make_tuple(buffer, buffer_size));
-            return std::make_tuple(buffer, buffer_size);
+            m_file_buffer_cache_map.emplace(relative_path.getString(), std::make_tuple(buffer, buffer_size));
+            return Interface::Archive::FileBuffer{buffer, buffer_size};
         }
     }
 
