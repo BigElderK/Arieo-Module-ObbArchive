@@ -6,31 +6,6 @@
 #include <cstring>
 namespace Arieo
 {
-    class FileBuffer
-        : public Interface::Archive::IFileBuffer
-    {
-    protected:
-        void* m_buffer = nullptr;
-        size_t m_size = 0;
-    public:
-        FileBuffer(void* buffer, size_t size)
-            : m_buffer(buffer), m_size(size)
-        {
-        }
-
-        ~FileBuffer()
-        {
-            if(m_buffer)
-            {
-                Base::Memory::free(m_buffer);
-                m_buffer = nullptr;
-            }
-        }
-
-        void* getBuffer() override { return m_buffer; }
-        size_t getBufferSize() override { return m_size; }
-    };
-
 #pragma pack(push, 1)
     // ZIP file structures for OBB reading
     struct ZipLocalFileHeader {
@@ -67,7 +42,32 @@ namespace Arieo
         uint32_t local_header_offset;
     };
 #pragma pack(pop)
+    class FileBuffer
+        : public Interface::Archive::IFileBuffer
+    {
+    protected:
+        void* m_buffer = nullptr;
+        size_t m_size = 0;
+    public:
+        FileBuffer(void* buffer, size_t size)
+            : m_buffer(buffer), m_size(size)
+        {
+        }
 
+        ~FileBuffer()
+        {
+            if(m_buffer)
+            {
+                Base::Memory::free(m_buffer);
+                m_buffer = nullptr;
+            }
+        }
+
+        void* getBuffer() override { return m_buffer; }
+        size_t getBufferSize() override { return m_size; }
+    };
+
+    
     struct ZipFileEntry {
         std::string filename;
         uint32_t compressed_size;
@@ -82,7 +82,7 @@ namespace Arieo
     {
     protected:
         std::filesystem::path m_obb_file_path;
-        std::unordered_set<Base::Interface<Interface::Archive::IFileBuffer>> m_file_buffers;
+        std::unordered_set<Base::Interop<Interface::Archive::IFileBuffer>> m_file_buffers;
         std::unordered_map<std::string, ZipFileEntry> m_zip_entries;
         mutable std::ifstream m_obb_file;
         bool m_is_valid;
@@ -101,8 +101,8 @@ namespace Arieo
             }
         }
 
-        Base::Interface<Interface::Archive::IFileBuffer> aquireFileBuffer(const Base::Parameter::String& relative_path) override;
-        void releaseFileBuffer(Base::Interface<Interface::Archive::IFileBuffer> file_buffer) override;
+        Base::Interop<Interface::Archive::IFileBuffer> aquireFileBuffer(const Base::Interop<std::string_view>& relative_path) override;
+        void releaseFileBuffer(Base::Interop<Interface::Archive::IFileBuffer> file_buffer) override;
 
         void clearCache();
         bool isValid() const { return m_is_valid; }
@@ -127,7 +127,7 @@ namespace Arieo
 
         }
     public:
-        Base::Interface<Interface::Archive::IArchive> createArchive(const Base::Parameter::String& obb_file_path) override
+        Base::Interop<Interface::Archive::IArchive> createArchive(const Base::Interop<std::string_view>& obb_file_path) override
         {
             std::filesystem::path obb_path(obb_file_path.getString());
             // Check if obb_file_path exists and is a regular file
@@ -137,7 +137,7 @@ namespace Arieo
                 return nullptr;
             }
             
-            Base::Interface<Interface::Archive::IArchive> created_archive = Base::Interface<Interface::Archive::IArchive>::createAs<OBBArchive>(obb_path.string());
+            Base::Interop<Interface::Archive::IArchive> created_archive = Base::Interop<Interface::Archive::IArchive>::createAs<OBBArchive>(obb_path.string());
             if(created_archive.castTo<OBBArchive>()->isValid() == false)
             {
                 created_archive.destroyAs<OBBArchive>();
@@ -146,7 +146,7 @@ namespace Arieo
             return created_archive;
         }
 
-        void destroyArchive(Base::Interface<Interface::Archive::IArchive> archive) override
+        void destroyArchive(Base::Interop<Interface::Archive::IArchive> archive) override
         {
             return archive.destroyAs<OBBArchive>();
         }
