@@ -5,14 +5,15 @@
 
 namespace Arieo
 {
-    Base::Interop::SharedRef<Interface::Archive::IFileBuffer> OBBArchive::aquireFileBuffer(const std::string& relative_path)
+    Base::Interop::SharedRef<Interface::Archive::IFileBuffer> OBBArchive::aquireFileBuffer(Base::Interop::StringView related_path)
     {
         if (!m_is_valid) {
             Core::Logger::error("OBB file is not valid: {}", m_obb_file_path.string());
             return nullptr;
         }
 
-        std::string path_str = relative_path;
+        std::string path_str = related_path.getString();
+
         auto entry_iter = m_zip_entries.find(path_str);
         if (entry_iter == m_zip_entries.end()) {
             Core::Logger::error("File not found in OBB: {}", path_str);
