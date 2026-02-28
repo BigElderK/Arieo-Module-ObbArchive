@@ -5,7 +5,7 @@
 
 namespace Arieo
 {
-    Base::Interop::SharedRef<Interface::Archive::IFileBuffer> OBBArchive::aquireFileBuffer(Base::Interop::StringView related_path)
+    Base::Interop::SharedRef<Base::IBuffer> OBBArchive::aquireFileBuffer(Base::Interop::StringView related_path)
     {
         if (!m_is_valid) {
             Core::Logger::error("OBB file is not valid: {}", m_obb_file_path.string());
@@ -65,7 +65,7 @@ namespace Arieo
             return nullptr;
         }
 
-        auto file_buffer = Base::Interop::createInstance<Interface::Archive::IFileBuffer, FileBuffer>(buffer, buffer_size);
+        auto file_buffer = Base::Interop::createInstance<Base::IBuffer, FileBuffer>(buffer, buffer_size);
         m_file_buffers.insert(file_buffer);
         return file_buffer;
     }

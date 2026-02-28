@@ -43,7 +43,7 @@ namespace Arieo
     };
 #pragma pack(pop)
     class FileBuffer
-        : public Interface::Archive::IFileBuffer
+        : public Base::IBuffer
     {
     protected:
         void* m_buffer = nullptr;
@@ -82,7 +82,7 @@ namespace Arieo
     {
     protected:
         std::filesystem::path m_obb_file_path;
-        std::unordered_set<Base::Interop::SharedRef<Interface::Archive::IFileBuffer>> m_file_buffers;
+        std::unordered_set<Base::Interop::SharedRef<Base::IBuffer>> m_file_buffers;
         std::unordered_map<std::string, ZipFileEntry> m_zip_entries;
         mutable std::ifstream m_obb_file;
         bool m_is_valid;
@@ -101,7 +101,7 @@ namespace Arieo
             }
         }
 
-        Base::Interop::SharedRef<Interface::Archive::IFileBuffer> aquireFileBuffer(Base::Interop::StringView related_path) override;
+        Base::Interop::SharedRef<Base::IBuffer> aquireFileBuffer(Base::Interop::StringView related_path) override;
 
         void clearCache();
         bool isValid() const { return m_is_valid; }
