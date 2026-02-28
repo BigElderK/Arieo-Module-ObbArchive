@@ -5,7 +5,7 @@
 
 namespace Arieo
 {
-    Base::Interop<Interface::Archive::IFileBuffer> OBBArchive::aquireFileBuffer(const Base::Interop<std::string_view>& relative_path)
+    Base::Interop::SharedRef<Interface::Archive::IFileBuffer> OBBArchive::aquireFileBuffer(const Base::InteropOld<std::string_view>& relative_path)
     {
         if (!m_is_valid) {
             Core::Logger::error("OBB file is not valid: {}", m_obb_file_path.string());
@@ -64,23 +64,13 @@ namespace Arieo
             return nullptr;
         }
 
-        auto file_buffer = Base::Interop<Interface::Archive::IFileBuffer>::createAs<FileBuffer>(buffer, buffer_size);
+        auto file_buffer = Base::Interop::createInstance<Interface::Archive::IFileBuffer, FileBuffer>(buffer, buffer_size);
         m_file_buffers.insert(file_buffer);
         return file_buffer;
     }
 
-    void OBBArchive::releaseFileBuffer(Base::Interop<Interface::Archive::IFileBuffer> file_buffer)
-    {
-        m_file_buffers.erase(file_buffer);
-        Base::Interop<Interface::Archive::IFileBuffer>::destroyAs<FileBuffer>(std::move(file_buffer));
-    }
-
     void OBBArchive::clearCache()
     {
-        for(auto fb : m_file_buffers)
-        {
-            Base::Interop<Interface::Archive::IFileBuffer>::destroyAs<FileBuffer>(std::move(fb));
-        }
         m_file_buffers.clear();
     }
 

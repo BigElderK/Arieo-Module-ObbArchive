@@ -82,7 +82,7 @@ namespace Arieo
     {
     protected:
         std::filesystem::path m_obb_file_path;
-        std::unordered_set<Base::Interop<Interface::Archive::IFileBuffer>> m_file_buffers;
+        std::unordered_set<Base::Interop::SharedRef<Interface::Archive::IFileBuffer>> m_file_buffers;
         std::unordered_map<std::string, ZipFileEntry> m_zip_entries;
         mutable std::ifstream m_obb_file;
         bool m_is_valid;
@@ -101,8 +101,7 @@ namespace Arieo
             }
         }
 
-        Base::Interop<Interface::Archive::IFileBuffer> aquireFileBuffer(const Base::Interop<std::string_view>& relative_path) override;
-        void releaseFileBuffer(Base::Interop<Interface::Archive::IFileBuffer> file_buffer) override;
+        Base::Interop::SharedRef<Interface::Archive::IFileBuffer> aquireFileBuffer(const Base::InteropOld<std::string_view>& relative_path) override;
 
         void clearCache();
         bool isValid() const { return m_is_valid; }
@@ -127,7 +126,7 @@ namespace Arieo
 
         }
     public:
-        Base::Interop<Interface::Archive::IArchive> createArchive(const Base::Interop<std::string_view>& obb_file_path) override
+        Base::Interop::SharedRef<Interface::Archive::IArchive> createArchive(const Base::InteropOld<std::string_view>& obb_file_path) override
         {
             std::filesystem::path obb_path(obb_file_path.getString());
             // Check if obb_file_path exists and is a regular file
@@ -137,19 +136,14 @@ namespace Arieo
                 return nullptr;
             }
             
-            Base::Interop<Interface::Archive::IArchive> created_archive = Base::Interop<Interface::Archive::IArchive>::createAs<OBBArchive>(obb_path.string());
-            if(created_archive.castTo<OBBArchive>()->isValid() == false)
+            Base::Interop::SharedRef<Interface::Archive::IArchive> created_archive 
+                = Base::Interop::createInstance<Interface::Archive::IArchive, OBBArchive>(obb_path);
+            
+            if(created_archive.castToInstance<OBBArchive>()->isValid() == false)
             {
-                Base::Interop<Interface::Archive::IArchive>::destroyAs<OBBArchive>(std::move(created_archive));
                 return nullptr;
             }
             return created_archive;
-        }
-
-        void destroyArchive(Base::Interop<Interface::Archive::IArchive> archive) override
-        {
-            Base::Interop<Interface::Archive::IArchive>::destroyAs<OBBArchive>(std::move(archive));
-            return;
         }
     };
 }
