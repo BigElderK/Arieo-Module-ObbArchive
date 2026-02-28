@@ -140,7 +140,7 @@ namespace Arieo
             Base::Interop<Interface::Archive::IArchive> created_archive = Base::Interop<Interface::Archive::IArchive>::createAs<OBBArchive>(obb_path.string());
             if(created_archive.castTo<OBBArchive>()->isValid() == false)
             {
-                created_archive.destroyAs<OBBArchive>();
+                Base::Interop<Interface::Archive::IArchive>::destroyAs<OBBArchive>(std::move(created_archive));
                 return nullptr;
             }
             return created_archive;
@@ -148,7 +148,8 @@ namespace Arieo
 
         void destroyArchive(Base::Interop<Interface::Archive::IArchive> archive) override
         {
-            return archive.destroyAs<OBBArchive>();
+            Base::Interop<Interface::Archive::IArchive>::destroyAs<OBBArchive>(std::move(archive));
+            return;
         }
     };
 }

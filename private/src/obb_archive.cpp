@@ -72,14 +72,14 @@ namespace Arieo
     void OBBArchive::releaseFileBuffer(Base::Interop<Interface::Archive::IFileBuffer> file_buffer)
     {
         m_file_buffers.erase(file_buffer);
-        file_buffer.destroyAs<FileBuffer>();
+        Base::Interop<Interface::Archive::IFileBuffer>::destroyAs<FileBuffer>(std::move(file_buffer));
     }
 
     void OBBArchive::clearCache()
     {
         for(auto fb : m_file_buffers)
         {
-            fb.destroyAs<FileBuffer>();
+            Base::Interop<Interface::Archive::IFileBuffer>::destroyAs<FileBuffer>(std::move(fb));
         }
         m_file_buffers.clear();
     }
