@@ -10,23 +10,24 @@ namespace Arieo
 
         static struct DllLoader
         {
-            Base::Instance<OBBArchiveManager> obb_archive_manager;
+            OBBArchiveManager obb_archive_manager_instance;
+            Base::Interop::SharedRef<Interface::Archive::IArchiveManager> obb_archive_manager = Base::Interop::makePersistentShared<Interface::Archive::IArchiveManager>(obb_archive_manager_instance);
 
             DllLoader()
             {
-                obb_archive_manager->initialize();
-                Core::ModuleManager::registerInstance<Interface::Archive::IArchiveManager, OBBArchiveManager>(
-                    "obb_archive", 
+                obb_archive_manager_instance.initialize();
+                Core::ModuleManager::registerInterface<Interface::Archive::IArchiveManager>(
+                    "obb_archive",
                     obb_archive_manager
                 );
             }
 
             ~DllLoader()
             {
-                Core::ModuleManager::unregisterInstance<Interface::Archive::IArchiveManager, OBBArchiveManager>(
+                Core::ModuleManager::unregisterInterface<Interface::Archive::IArchiveManager>(
                     obb_archive_manager
                 );
-                obb_archive_manager->finalize();
+                obb_archive_manager_instance.finalize();
             }
         } dll_loader;
     }

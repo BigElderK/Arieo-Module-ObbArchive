@@ -42,7 +42,7 @@ namespace Arieo
         uint32_t local_header_offset;
     };
 #pragma pack(pop)
-    class FileBuffer
+    class FileBuffer final
         : public Base::IBuffer
     {
     protected:
@@ -77,7 +77,7 @@ namespace Arieo
         uint32_t file_data_offset;
     };
 
-    class OBBArchive
+    class OBBArchive final
         : public Interface::Archive::IArchive
     {
     protected:
@@ -112,7 +112,7 @@ namespace Arieo
         bool parseCentralDirectory(uint32_t cd_offset, uint32_t cd_size, uint16_t total_entries);
     };
 
-    class OBBArchiveManager
+    class OBBArchiveManager final
         : public Interface::Archive::IArchiveManager
     {
     public:
