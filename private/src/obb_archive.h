@@ -101,7 +101,7 @@ namespace Arieo
             }
         }
 
-        Base::Interop::SharedRef<Base::IBuffer> aquireFileBuffer(Base::Interop::StringView related_path) override;
+        Base::Interop::SharedRef<Base::IBuffer> aquireFileBuffer(const Base::Interop::StringView& related_path) override;
 
         void clearCache();
         bool isValid() const { return m_is_valid; }
@@ -126,7 +126,7 @@ namespace Arieo
 
         }
     public:
-        Base::Interop::SharedRef<Interface::Archive::IArchive> createArchive(Base::Interop::StringView root_path) override
+        Base::Interop::SharedRef<Interface::Archive::IArchive> createArchive(const Base::Interop::StringView& root_path) override
         {
             std::filesystem::path obb_path(root_path.getString());
             // Check if obb_file_path exists and is a regular file

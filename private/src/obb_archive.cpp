@@ -5,7 +5,7 @@
 
 namespace Arieo
 {
-    Base::Interop::SharedRef<Base::IBuffer> OBBArchive::aquireFileBuffer(Base::Interop::StringView related_path)
+    Base::Interop::SharedRef<Base::IBuffer> OBBArchive::aquireFileBuffer(const Base::Interop::StringView& related_path)
     {
         if (!m_is_valid) {
             Core::Logger::error("OBB file is not valid: {}", m_obb_file_path.string());
