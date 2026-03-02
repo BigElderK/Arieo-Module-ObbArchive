@@ -65,9 +65,11 @@ namespace Arieo
             return nullptr;
         }
 
-        auto file_buffer = Base::Interop::createInstance<Base::IBuffer, FileBuffer>(buffer, buffer_size);
-        m_file_buffers.insert(file_buffer);
-        return file_buffer;
+        return Base::Interop::SharedRef<Base::IBuffer>::createInstance<Base::Buffer>(
+            buffer, 
+            buffer_size,
+            [](void* ptr, size_t) { Base::Memory::free(ptr); }
+        );
     }
 
     void OBBArchive::clearCache()

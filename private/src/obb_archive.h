@@ -42,32 +42,6 @@ namespace Arieo
         uint32_t local_header_offset;
     };
 #pragma pack(pop)
-    class FileBuffer final
-        : public Base::IBuffer
-    {
-    protected:
-        void* m_buffer = nullptr;
-        size_t m_size = 0;
-    public:
-        FileBuffer(void* buffer, size_t size)
-            : m_buffer(buffer), m_size(size)
-        {
-        }
-
-        ~FileBuffer()
-        {
-            if(m_buffer)
-            {
-                Base::Memory::free(m_buffer);
-                m_buffer = nullptr;
-            }
-        }
-
-        void* getBuffer() override { return m_buffer; }
-        size_t getBufferSize() override { return m_size; }
-    };
-
-    
     struct ZipFileEntry {
         std::string filename;
         uint32_t compressed_size;
@@ -137,7 +111,7 @@ namespace Arieo
             }
             
             Base::Interop::SharedRef<Interface::Archive::IArchive> created_archive 
-                = Base::Interop::createInstance<Interface::Archive::IArchive, OBBArchive>(obb_path);
+                = Base::Interop::SharedRef<Interface::Archive::IArchive>::createInstance<OBBArchive>(obb_path);
             
             if(created_archive.castToInstance<OBBArchive>()->isValid() == false)
             {
